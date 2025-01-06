@@ -1,0 +1,314 @@
+
+<!DOCTYPE html>
+<html lang="es">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Call Time</title>
+    <style>
+        body {
+            font-family: Arial, sans-serif;
+            margin: 0;
+            padding: 0;
+            display: flex;
+            flex-direction: column;
+            align-items: center;
+            justify-content: center;
+            height: 100vh;
+            background: linear-gradient(135deg, #87CEEB, #f0e68c);
+        }
+
+        #container {
+            display: flex;
+            flex-direction: row;
+            align-items: stretch;
+            justify-content: space-between;
+            width: 100%;
+            max-width: 1200px;
+            height: 80%;
+            position: relative;
+            gap: 20px;
+        }
+
+        .video-container {
+            flex: 2;
+            position: relative;
+            width: 100%;
+            height: 100%;
+            background: #000;
+            border: 2px solid #333;
+            border-radius: 10px;
+            overflow: hidden;
+        }
+
+        video {
+            width: 100%;
+            height: 100%;
+            object-fit: contain;
+        }
+
+        .side-tools {
+            flex: 1;
+            display: flex;
+            flex-direction: column;
+            justify-content: space-between;
+            margin-left: 10px;
+            position: relative;
+            height: 100%;
+        }
+
+        .tool {
+            margin-bottom: 20px;
+            display: flex;
+            flex-direction: column;
+            border: 2px solid #333;
+            border-radius: 10px;
+            background: white;
+            padding: 10px;
+        }
+
+        textarea {
+            width: 100%;
+            padding: 10px;
+            border: none;
+            border-radius: 10px;
+            resize: none;
+            font-size: 14px;
+        }
+
+        canvas {
+            width: 100%;
+            height: 200px;
+            border-radius: 10px;
+            background: #f4f4f4;
+        }
+
+        button {
+            margin-top: 10px;
+            padding: 10px 20px;
+            border: none;
+            border-radius: 5px;
+            background-color: #007BFF;
+            color: white;
+            font-size: 16px;
+            cursor: pointer;
+            transition: background-color 0.3s ease;
+        }
+
+        button:hover {
+            background-color: #0056b3;
+        }
+
+        .tools {
+            display: flex;
+            flex-direction: column;
+            gap: 10px;
+            margin-top: 10px;
+        }
+
+        .small-buttons {
+            display: flex;
+            flex-direction: column;
+            gap: 5px;
+        }
+
+        .tools-container {
+            display: flex;
+            flex-direction: column;
+            margin-top: 20px;
+        }
+
+        .tools-container button {
+            margin-bottom: 10px;
+        }
+
+        h2 {
+            font-size: 18px;
+            font-weight: bold;
+            color: #333;
+        }
+
+        label {
+            font-size: 14px;
+            color: #555;
+        }
+
+        .control-buttons {
+            display: flex;
+            justify-content: center;
+            gap: 20px;
+            margin-top: 20px;
+        }
+
+        /* Estilo para los subtítulos */
+        #subtitulos {
+            position: absolute;
+            bottom: 10px;
+            left: 50%;
+            transform: translateX(-50%);
+            background-color: rgba(0, 0, 0, 0.7);
+            color: white;
+            padding: 10px;
+            border-radius: 5px;
+            font-size: 16px;
+            max-width: 80%;
+            word-wrap: break-word;
+        }
+    </style>
+</head>
+<body>
+    <h1>Call Time</h1>
+
+    <div class="control-buttons">
+        <button id="toggle-camara">Encender/Apagar Cámara</button>
+        <button id="encender-microfono">Encender Micrófono</button>
+        <button id="apagar-microfono">Apagar Micrófono</button>
+        <button id="compartir-pantalla">Compartir Pantalla</button>
+        <button id="toggle-subtitulos">Apagar Subtítulos</button> <!-- Botón para apagar los subtítulos -->
+    </div>
+
+    <div id="container">
+        <div class="video-container">
+            <video id="video" autoplay muted playsinline></video>
+            <video id="screen-share" autoplay playsinline style="width: 100%; height: 100%; object-fit: contain; position: absolute; top: 0; left: 0; opacity: 0.7;"></video>
+            <!-- Contenedor de los subtítulos -->
+            <div id="subtitulos"></div>
+        </div>
+
+        <div class="side-tools">
+            <div class="tool">
+                <h2>Bloc de Notas</h2>
+                <textarea id="notas" placeholder="Escribe tus notas aquí..."></textarea>
+                <div class="tools">
+                    <label for="color-notas">Color:</label>
+                    <input type="color" id="color-notas">
+                    <label for="tipo-letra">Fuente:</label>
+                    <select id="tipo-letra">
+                        <option value="Arial">Arial</option>
+                        <option value="Courier New">Courier New</option>
+                        <option value="Georgia">Georgia</option>
+                        <option value="Times New Roman">Times New Roman</option>
+                        <option value="Verdana">Verdana</option>
+                    </select>
+                    <label for="tamano-letra">Tamaño:</label>
+                    <input type="range" id="tamano-letra" min="12" max="30" value="14">
+                    <button id="guardar-notas">Guardar Notas</button>
+                    <!-- Botón para iniciar el dictado por voz -->
+                    <button id="dictado-voz">Dictar Notas</button>
+                </div>
+            </div>
+
+            <div class="tool">
+                <h2>Pizarra</h2>
+                <canvas id="pizarra" width="300" height="300"></canvas>
+                <div class="tools">
+                    <div class="small-buttons">
+                        <input type="color" value="#000000" id="color-selector">
+                        <button id="dibujar">Dibujar</button>
+                        <button id="borrador">Borrador</button>
+                        <button id="guardar-pizarra">Guardar Pizarra</button>
+                    </div>
+                    <label for="intensidad-pizarra">Tamaño del trazo:</label>
+                    <input type="range" id="intensidad-pizarra" min="1" max="10" value="5">
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <script src="https://cdnjs.cloudflare.com/ajax/libs/jspdf/2.5.1/jspdf.umd.min.js"></script>
+    <script>
+        // Solicitar permisos para cámara y micrófono solo una vez al inicio
+        let mediaStream = null;
+
+        async function obtenerPermisos() {
+            if (navigator.mediaDevices) {
+                mediaStream = await navigator.mediaDevices.getUserMedia({ video: true, audio: true });
+                const video = document.getElementById('video');
+                video.srcObject = mediaStream;
+            } else {
+                alert('No se puede acceder a la cámara y el micrófono en este navegador.');
+            }
+        }
+
+        obtenerPermisos(); // Llamada para obtener permisos
+
+
+        // Compartir Pantalla
+        const compartirPantalla = document.getElementById('compartir-pantalla');
+        const screenShareVideo = document.getElementById('screen-share');
+
+        compartirPantalla.addEventListener('click', async () => {
+            try {
+                const screenStream = await navigator.mediaDevices.getDisplayMedia({ video: true });
+                screenShareVideo.srcObject = screenStream;
+
+                // Detener la pantalla compartida cuando el usuario detenga manualmente la captura
+                screenStream.getVideoTracks()[0].addEventListener('ended', () => {
+                    screenShareVideo.srcObject = null;
+                });
+            } catch (err) {
+                alert('No se pudo compartir la pantalla. ' + err.message);
+            }
+        });
+
+        // Subtítulos
+        const subtitulos = document.getElementById('subtitulos');
+        const recognition = new (window.SpeechRecognition || window.webkitSpeechRecognition)();
+
+        recognition.lang = 'es-ES';
+        recognition.interimResults = true;
+        recognition.maxAlternatives = 1;
+
+        recognition.addEventListener('result', (event) => {
+            const transcript = event.results[0][0].transcript;
+            subtitulos.textContent = transcript;
+        });
+
+        recognition.addEventListener('end', () => {
+            recognition.start(); // Reinicia la escucha para seguir capturando el audio
+        });
+
+        recognition.start(); // Comienza el reconocimiento de voz
+
+        // Botón para apagar los subtítulos
+        const toggleSubtitulos = document.getElementById('toggle-subtitulos');
+        toggleSubtitulos.addEventListener('click', () => {
+            if (subtitulos.style.display === 'none') {
+                subtitulos.style.display = 'block';
+            } else {
+                subtitulos.style.display = 'none';
+            }
+        });
+
+        // Inicializar reconocimiento de voz para dictado de notas
+        const dictadoVozButton = document.getElementById('dictado-voz');
+        const notasTextArea = document.getElementById('notas');
+        
+        recognition.lang = 'es-ES';
+        recognition.interimResults = true;  // Mostrar resultados intermedios
+        recognition.maxAlternatives = 1;
+
+        recognition.addEventListener('result', (event) => {
+            // Capturar el texto transcrito y agregarlo al área de notas
+            const transcript = event.results[0][0].transcript;
+            notasTextArea.value += transcript + ' ';  // Concatenar al contenido actual
+        });
+
+        recognition.addEventListener('end', () => {
+            recognition.start(); // Reiniciar el reconocimiento cuando termine
+        });
+
+        // Iniciar el dictado cuando el usuario haga clic en el botón
+        dictadoVozButton.addEventListener('click', () => {
+            recognition.start();  // Iniciar el reconocimiento
+            notasTextArea.placeholder = "Escuchando..."; // Cambiar el placeholder para indicar que se está escuchando
+        });
+
+        // Detener el dictado al hacer clic en el mismo botón
+        dictadoVozButton.addEventListener('dblclick', () => {
+            recognition.stop();  // Detener el reconocimiento de voz
+            notasTextArea.placeholder = "Escribe tus notas aquí...";  // Restaurar el placeholder
+        });
+    </script>
+</body>
+</html>

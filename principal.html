@@ -1,0 +1,285 @@
+<!DOCTYPE html>
+<html lang="es">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Call Time</title>
+    <style>
+        body {
+            font-family: Arial, sans-serif;
+            display: flex;
+            justify-content: center;
+            align-items: center;
+            height: 100vh;
+            margin: 0;
+            background: linear-gradient(135deg, #87CEEB, #f0e68c);
+            color: #333;
+        }
+
+        .container {
+            background: #fff;
+            padding: 30px;
+            border-radius: 15px;
+            box-shadow: 0 4px 8px rgba(0, 0, 0, 0.1);
+            text-align: center;
+            max-width: 500px;
+            width: 100%;
+        }
+
+        h1 {
+            margin-bottom: 20px;
+            font-size: 24px;
+            color: #007BFF;
+        }
+
+        .btn {
+            display: inline-block;
+            padding: 12px 25px;
+            font-size: 16px;
+            color: #fff;
+            background-color: #007BFF;
+            border: none;
+            border-radius: 8px;
+            cursor: pointer;
+            transition: background-color 0.3s;
+            margin: 10px 0;
+        }
+
+        .btn:hover {
+            background-color: #0056b3;
+        }
+
+        .url-box {
+            margin: 20px 0;
+            padding: 12px;
+            border: 1px solid #ddd;
+            border-radius: 8px;
+            background-color: #f9f9f9;
+            word-wrap: break-word;
+        }
+
+        .hidden {
+            display: none;
+        }
+
+        .copy-btn {
+            background-color: #28a745;
+        }
+
+        .copy-btn:hover {
+            background-color: #218838;
+        }
+
+        .participants-list {
+            margin-top: 20px;
+            padding: 10px;
+            border: 1px solid #ddd;
+            border-radius: 8px;
+            background-color: #f9f9f9;
+            max-height: 150px;
+            overflow-y: auto;
+        }
+
+        .participant {
+            margin-bottom: 10px;
+            padding: 5px;
+            border: 1px solid #ddd;
+            border-radius: 5px;
+            background-color: #f0f0f0;
+        }
+
+        .error-message {
+            color: red;
+            font-size: 14px;
+            margin-top: 10px;
+        }
+
+        #startCallContainer {
+            margin-top: 20px;
+        }
+
+        .disabled {
+            background-color: #6c757d;
+            cursor: not-allowed;
+        }
+    </style>
+</head>
+<body>
+    <div class="container" role="main" aria-labelledby="pageTitle">
+        <h1 id="pageTitle">¡Crea tu videollamada!</h1>
+        <button class="btn" onclick="generateCallLink()" aria-label="Generar enlace de videollamada" role="button">Generar enlace de llamada</button>
+
+        <div id="callLinkContainer" class="hidden" aria-live="polite">
+            <p>Comparte este enlace para invitar a otros:</p>
+            <div class="url-box" id="callLink" aria-live="polite" role="region"></div>
+            <button class="btn copy-btn" onclick="copyToClipboard()" aria-label="Copiar enlace al portapapeles" role="button">Copiar enlace</button>
+        </div>
+
+        <div id="participantsContainer" class="hidden" aria-live="polite">
+            <h3>Participantes:</h3>
+            <div id="participantsList" class="participants-list" aria-live="polite"></div>
+            <label for="participantName" class="sr-only">Escribe tu nombre:</label>
+            <input type="text" id="participantName" placeholder="Escribe tu nombre" aria-label="Escribe tu nombre" />
+            <button class="btn" onclick="addParticipant()" aria-label="Añadir Participante" role="button">Añadir Participante</button>
+        </div>
+
+        <div id="startCallContainer" class="hidden" aria-live="polite">
+            <button id="startCallButton" class="btn disabled" onclick="window.location.href='index.html'" aria-label="Iniciar videollamada" role="button" aria-disabled="true">Iniciar Videollamada</button>
+        </div>
+
+        <button class="btn" onclick="toggleVoiceAndMouseTracking()" aria-label="Activar/Desactivar funciones de voz y seguimiento del mouse" role="button" id="toggleButton">Desactivar funciones</button>
+
+        <p class="error-message" id="error-message" aria-live="assertive"></p>
+    </div>
+
+    <script>
+        let participants = [];
+        const requiredParticipants = 2; // Número de participantes necesarios para iniciar la videollamada
+        let isVoiceAndMouseTrackingEnabled = true; // Control de la funcionalidad
+
+        // Función para generar enlace
+        function generateCallLink() {
+            const code = Math.random().toString(36).substring(2, 10);
+            const url = `https://videocall.example.com/join/${code}`;
+
+            const callLinkContainer = document.getElementById('callLinkContainer');
+            const callLink = document.getElementById('callLink');
+            callLink.textContent = url;
+            callLinkContainer.classList.remove('hidden');
+            document.getElementById('participantsContainer').classList.remove('hidden');
+            document.getElementById('startCallContainer').classList.remove('hidden');
+            speak("Enlace generado. Puedes copiarlo o agregar participantes.");
+        }
+
+        // Función para copiar el enlace
+        function copyToClipboard() {
+            const callLink = document.getElementById('callLink').textContent;
+            const errorMessage = document.getElementById('error-message');
+
+            navigator.clipboard.writeText(callLink).then(() => {
+                alert('¡Enlace copiado al portapapeles!');
+                speak("Enlace copiado al portapapeles.");
+            }).catch(err => {
+                errorMessage.textContent = 'Error al copiar el enlace. Intenta de nuevo.';
+            });
+        }
+
+        // Función para añadir participantes
+        function addParticipant() {
+            const name = document.getElementById('participantName').value;
+            if (name) {
+                participants.push(name);
+                updateParticipantsList();
+                document.getElementById('participantName').value = '';
+            }
+        }
+
+        // Función para actualizar la lista de participantes
+        function updateParticipantsList() {
+            const participantsList = document.getElementById('participantsList');
+            participantsList.innerHTML = '';
+
+            participants.forEach(participant => {
+                const participantDiv = document.createElement('div');
+                participantDiv.classList.add('participant');
+                participantDiv.textContent = participant;
+                participantsList.appendChild(participantDiv);
+            });
+
+            if (participants.length >= requiredParticipants) {
+                document.getElementById('startCallButton').classList.remove('disabled');
+                document.getElementById('startCallButton').disabled = false;
+                document.getElementById('startCallButton').ariaDisabled = false; // Update ARIA state
+                speak("Participantes suficientes, puedes iniciar la videollamada.");
+            }
+        }
+
+        // Función para iniciar la videollamada
+        function startCall() {
+            const callLink = document.getElementById('callLink').textContent;
+            window.location.href = callLink;
+        }
+
+        // Función para iniciar el reconocimiento de voz
+        function startVoiceCommand() {
+            const recognition = new (window.SpeechRecognition || window.webkitSpeechRecognition)();
+            recognition.lang = 'es-ES';
+            recognition.start();
+
+            recognition.onresult = function(event) {
+                const command = event.results[0][0].transcript.toLowerCase();
+                handleVoiceCommand(command);
+            };
+
+            recognition.onerror = function(event) {
+                console.log("Error al reconocer la voz: ", event.error);
+            };
+        }
+
+        // Función para manejar los comandos de voz
+        function handleVoiceCommand(command) {
+            console.log("Comando recibido: ", command);
+            command = command.toLowerCase();
+
+            if (command.includes('luma')) {
+                if (command.includes('generar enlace')) {
+                    generateCallLink();
+                    speak("Enlace generado con éxito.");
+                } else if (command.includes('iniciar videollamada')) {
+                    startCall();
+                    speak("Iniciando la videollamada.");
+                } else {
+                    speak("Comando no reconocido.");
+                }
+            } else {
+                speak("Por favor di 'Luma' antes de tu comando.");
+            }
+        }
+
+        // Función para que el sistema hable
+        function speak(message) {
+            if (isVoiceAndMouseTrackingEnabled) {
+                const speech = new SpeechSynthesisUtterance(message);
+                window.speechSynthesis.speak(speech);
+            }
+        }
+
+        // Evento para seguir la posición del mouse y decir el lugar donde está el cursor
+        document.addEventListener('mousemove', function(event) {
+            if (!isVoiceAndMouseTrackingEnabled) return;
+
+            const mouseX = event.clientX;
+            const mouseY = event.clientY;
+
+            const startCallButton = document.getElementById('startCallButton');
+            const startCallButtonRect = startCallButton.getBoundingClientRect();
+
+            // Verificar si el mouse está encima del botón "Iniciar llamada"
+            if (
+                mouseX >= startCallButtonRect.left &&
+                mouseX <= startCallButtonRect.right &&
+                mouseY >= startCallButtonRect.top &&
+                mouseY <= startCallButtonRect.bottom
+            ) {
+                speak("El mouse está sobre el botón de iniciar llamada.");
+            }
+        });
+
+        // Función para alternar la activación y desactivación de las funciones de voz y seguimiento del mouse
+        function toggleVoiceAndMouseTracking() {
+            isVoiceAndMouseTrackingEnabled = !isVoiceAndMouseTrackingEnabled;
+            const toggleButton = document.getElementById('toggleButton');
+            if (isVoiceAndMouseTrackingEnabled) {
+                toggleButton.textContent = "Desactivar funciones";
+                speak("Las funciones de voz y seguimiento del mouse están activadas.");
+            } else {
+                toggleButton.textContent = "Activar funciones";
+                speak("Las funciones de voz y seguimiento del mouse están desactivadas.");
+            }
+        }
+
+        // Iniciar reconocimiento de voz automáticamente
+        startVoiceCommand();
+    </script>
+</body>
+</html>
